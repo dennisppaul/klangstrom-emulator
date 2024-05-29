@@ -37,7 +37,6 @@ compiler.klst_define=
 
 # umgebung
 compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl2/umgebung/include -I{runtime.platform.path}/cores/sdl2/umgebung/src -I{runtime.platform.path}/cores/sdl2/umgebung/include/ip -I{runtime.platform.path}/cores/sdl2/umgebung/include/osc -I/opt/homebrew/include/freetype2/
-# compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl2/umgebung/include -I{runtime.platform.path}/cores/sdl2/umgebung/src -I{runtime.platform.path}/cores/sdl2/umgebung/include/ip -I{runtime.platform.path}/cores/sdl2/umgebung/include/osc -I/opt/homebrew/Cellar/freetype/2.13.2/include/freetype2/
 
 compiler.umgebung_libs=-L/opt/homebrew/lib -lftgl -framework OpenGL -lGLEW
 
