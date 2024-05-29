@@ -1,0 +1,7 @@
+brew 'cmake'
+brew 'pkgconfig'
+brew 'sdl2'
+brew 'ftgl'
+brew 'glew'
+brew 'ffmpeg'
+brew 'rtmidi'
