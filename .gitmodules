@@ -1,0 +1,3 @@
+[submodule "emulator/cores/sdl2/umgebung"]
+	path = emulator/cores/sdl2/umgebung
+	url = https://github.com/dennisppaul/umgebung.git
