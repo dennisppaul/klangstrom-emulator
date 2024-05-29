@@ -89,4 +89,3 @@ class UmgebungApp : public PApplet {
 PApplet* umgebung::instance() {
     return new UmgebungApp();
 }
-

@@ -7,8 +7,8 @@
 #include <math.h>
 
 #ifndef WEAK
-#define WEAK __attribute__ ((weak))
+#define WEAK __attribute__((weak))
 #endif
 
-extern void setup(void) ;
-extern void loop(void) ;
+extern void setup(void);
+extern void loop(void);
