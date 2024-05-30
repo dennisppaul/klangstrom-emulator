@@ -27,15 +27,21 @@
 
 using namespace umgebung;
 
-void sketch_setup() {
+static std::function<void(float**, float**, int)> fAudioDeviceCallback;
+
+void register_audio_device(const std::function<void(float**, float**, int)> callback) {
+    fAudioDeviceCallback = callback;
+}
+
+static void sketch_setup() {
     setup();
 }
 
-void sketch_loop() {
+static void sketch_loop() {
     loop();
 }
 
-class KlangstromEmulatorApp : public PApplet {
+class KlangstromEmulator : public PApplet {
 
     PVector           mVector{16, 16};
     PShape            mShape;
@@ -97,11 +103,8 @@ class KlangstromEmulatorApp : public PApplet {
     }
 
     void audioblock(float** input, float** output, int length) {
-        for (int i = 0; i < length; i++) {
-            float sample = random(-0.1, 0.1);
-            for (int j = 0; j < audio_output_channels; ++j) {
-                output[j][i] = sample;
-            }
+        if (fAudioDeviceCallback) {
+            fAudioDeviceCallback(input, output, length);
         }
     }
 
@@ -113,5 +116,5 @@ class KlangstromEmulatorApp : public PApplet {
 };
 
 PApplet* umgebung::instance() {
-    return new KlangstromEmulatorApp();
+    return new KlangstromEmulator();
 }
