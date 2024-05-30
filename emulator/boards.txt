@@ -39,12 +39,18 @@ KLST_EMU.menu.audioblock.64.build.flags.audioblock=64
 KLST_EMU.menu.audioblock.32=32 samples
 KLST_EMU.menu.audioblock.32.build.flags.audioblock=32
 
+KLST_EMU.menu.board.KLST_CATERPILLAR=KLST_CATERPILLAR
+KLST_EMU.menu.board.KLST_CATERPILLAR.build.flags.board=0x47
+KLST_EMU.menu.board.KLST_PANDA=KLST_PANDA
+KLST_EMU.menu.board.KLST_PANDA.build.flags.board=0x46
 KLST_EMU.menu.board.KLST_SHEEP=KLST_SHEEP ( 16 LEDs, 2 Encoders, Display, ... )
-KLST_EMU.menu.board.KLST_SHEEP.build.flags.board=2
+KLST_EMU.menu.board.KLST_SHEEP.build.flags.board=0x45
 KLST_EMU.menu.board.KLST_TINY=KLST_TINY ( 3 LEDs, 3 Encoders, ... )
-KLST_EMU.menu.board.KLST_TINY.build.flags.board=1
+KLST_EMU.menu.board.KLST_TINY.build.flags.board=0x44
 KLST_EMU.menu.board.KLST_CORE=KLST_CORE ( 3 LEDs, 3 Encoders, ... )
-KLST_EMU.menu.board.KLST_CORE.build.flags.board=0
+KLST_EMU.menu.board.KLST_CORE.build.flags.board=0x43
+KLST_EMU.menu.board.GENERIC=GENERIC
+KLST_EMU.menu.board.GENERIC.build.flags.board=0x42
 
 KLST_EMU.menu.OSC.disable=Disable OSC
 KLST_EMU.menu.OSC.disable.build.flags.OSC=

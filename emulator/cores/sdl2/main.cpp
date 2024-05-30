@@ -35,7 +35,7 @@ void sketch_loop() {
     loop();
 }
 
-class UmgebungApp : public PApplet {
+class KlangstromEmulatorApp : public PApplet {
 
     PVector           mVector{16, 16};
     PShape            mShape;
@@ -113,5 +113,5 @@ class UmgebungApp : public PApplet {
 };
 
 PApplet* umgebung::instance() {
-    return new UmgebungApp();
+    return new KlangstromEmulatorApp();
 }
