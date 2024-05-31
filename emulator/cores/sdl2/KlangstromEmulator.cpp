@@ -27,13 +27,7 @@
 
 using namespace umgebung;
 
-// static std::function<void(float**, float**, int)> fAudioDeviceCallback;
-
 extern "C" void audiocodec_callback_class_f(float** input, float** output, uint16_t length);
-
-// void audiocodec_register_audio_device_cpp(const std::function<void(float**, float**, int)> callback) {
-//     fAudioDeviceCallback = callback;
-// }
 
 static void sketch_setup() {
     setup();
