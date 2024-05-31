@@ -1,21 +1,21 @@
 /*
-  main.cpp - Main loop for Arduino sketches
-  Copyright (c) 2005-2013 Arduino Team.  All right reserved.
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+ * Klangstrom
+ *
+ * This file is part of the *wellen* library (https://github.com/dennisppaul/wellen).
+ * Copyright (c) 2024 Dennis P Paul.
+ *
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #define ARDUINO_MAIN
 #include "Arduino.h"
@@ -27,11 +27,13 @@
 
 using namespace umgebung;
 
-static std::function<void(float**, float**, int)> fAudioDeviceCallback;
+// static std::function<void(float**, float**, int)> fAudioDeviceCallback;
 
-void register_audio_device(const std::function<void(float**, float**, int)> callback) {
-    fAudioDeviceCallback = callback;
-}
+extern "C" void audiocodec_callback_class_f(float** input, float** output, uint16_t length);
+
+// void audiocodec_register_audio_device_cpp(const std::function<void(float**, float**, int)> callback) {
+//     fAudioDeviceCallback = callback;
+// }
 
 static void sketch_setup() {
     setup();
@@ -103,9 +105,10 @@ class KlangstromEmulator : public PApplet {
     }
 
     void audioblock(float** input, float** output, int length) {
-        if (fAudioDeviceCallback) {
-            fAudioDeviceCallback(input, output, length);
-        }
+        // if (fAudioDeviceCallback) {
+        //     fAudioDeviceCallback(input, output, length);
+        // }
+        audiocodec_callback_class_f(input, output, length);
     }
 
     void keyPressed() {
