@@ -18,12 +18,12 @@
  */
 
 #define ARDUINO_MAIN
-#include "Arduino.h"
 #include <stdio.h>
 #include <SDL.h>
 #include <iostream>
 
-#include "Umgebung.h"
+#include "KlangstromEmulator.h"
+#include "KlangstromEnvironment.h"
 
 using namespace umgebung;
 
@@ -37,81 +37,101 @@ static void sketch_loop() {
     loop();
 }
 
-class KlangstromEmulator : public PApplet {
+KlangstromEmulator* KlangstromEmulator::fInstance = nullptr;
 
-    PVector           mVector{16, 16};
-    PShape            mShape;
-    int               mouseMoveCounter = 0;
-    std::string       mFontPath        = sketchPath();
-    const std::string mFontName        = "JetBrainsMonoNL-Regular.ttf";
-    PFont*            mFont;
-
-    void arguments(std::vector<std::string> args) {
-        for (auto& s: args) {
-            println("> ", s);
-            if (begins_with(s, "--fontpath=")) {
-                println("found fontpath: ", get_string_from_argument(s));
-                mFontPath = get_string_from_argument(s);
-            }
+void KlangstromEmulator::arguments(std::vector<std::string> args) {
+    for (auto& s: args) {
+        println("> ", s);
+        if (begins_with(s, "--fontpath=")) {
+            println("found fontpath: ", get_string_from_argument(s));
+            mFontPath = get_string_from_argument(s);
         }
     }
+}
 
-    void settings() {
-        size(1024, 768);
-        antialiasing          = 8;
-        enable_retina_support = true;
-        headless              = false;
-        no_audio              = false;
-        monitor               = DEFAULT;
+void KlangstromEmulator::settings() {
+    size(1024, 768);
+    antialiasing          = 8;
+    enable_retina_support = true;
+    headless              = false;
+    no_audio              = false;
+    monitor               = DEFAULT;
+}
+
+void KlangstromEmulator::setup() {
+    println("sketchpath: ", sketchPath());
+    println("fontpath  : ", mFontPath);
+    println("width     : ", width);
+    println("height    : ", height);
+
+    if (exists(mFontPath + "/" + mFontName)) {
+        mFont = loadFont(mFontPath + "/" + mFontName, DEFAULT_FONT_SIZE);
+        textFont(mFont);
+    } else {
+        println("could not load font: ", (mFontPath + "/" + mFontName));
     }
 
-    void setup() {
-        println("sketchpath: ", sketchPath());
-        println("fontpath  : ", mFontPath);
-        println("width     : ", width);
-        println("height    : ", height);
+    sketch_setup();
+}
 
-        if (exists(mFontPath + "/" + mFontName)) {
-            mFont = loadFont(mFontPath + "/" + mFontName, 32);
-            textFont(mFont);
-        } else {
-            println("could not load font: ", (mFontPath + "/" + mFontName));
-        }
+void KlangstromEmulator::draw() {
+    background(0.2);
 
-        sketch_setup();
+    // fill(0);
+    // text(get_emulator_name(), 10, 10 + 32);
+
+    // stroke(0);
+    // noFill();
+    // rect(10, 10, width / 2 - 20, height / 2 - 20);
+
+    // noStroke();
+    // fill(random(0, 0.2));
+    // rect(20, 20, width / 2 - 40, height / 2 - 40);
+
+    fill(1);
+    text(get_emulator_name(), 10, 10 + DEFAULT_FONT_SIZE);
+
+    sketch_loop();
+}
+
+void KlangstromEmulator::audioblock(float** input, float** output, int length) {
+    // if (fAudioDeviceCallback) {
+    //     fAudioDeviceCallback(input, output, length);
+    // }
+    audiocodec_callback_class_f(input, output, length);
+}
+
+void KlangstromEmulator::keyPressed() {
+    if (key == 'q') {
+        exit();
     }
+}
 
-    void draw() {
-        background(1);
+std::string KlangstromEmulator::get_emulator_name() {
+#if defined(GENERIC_EMU)
+    return "GENERIC";
+#elif defined(KLST_CORE_EMU)
+    return "KLST_CORE";
+#elif defined(KLST_TINY_EMU)
+    return "KLST_TINY";
+#elif defined(KLST_SHEEP_EMU)
+    return "KLST_SHEEP";
+#elif defined(KLST_PANDA_EMU)
+    return "KLST_PANDA";
+#elif defined(KLST_CATERPILLAR_EMU)
+    return "KLST_CATERPILLAR";
+#else
+    return "(UNDEFINED)";
+#endif
+}
 
-        fill(0);
-        text("23", 10, height - 20);
-
-        stroke(0);
-        noFill();
-        rect(10, 10, width / 2 - 20, height / 2 - 20);
-
-        noStroke();
-        fill(random(0, 0.2));
-        rect(20, 20, width / 2 - 40, height / 2 - 40);
-
-        sketch_loop();
+KlangstromEmulator* KlangstromEmulator::instance() {
+    if (fInstance == nullptr) {
+        fInstance = new KlangstromEmulator();
     }
-
-    void audioblock(float** input, float** output, int length) {
-        // if (fAudioDeviceCallback) {
-        //     fAudioDeviceCallback(input, output, length);
-        // }
-        audiocodec_callback_class_f(input, output, length);
-    }
-
-    void keyPressed() {
-        if (key == 'q') {
-            exit();
-        }
-    }
-};
+    return fInstance;
+}
 
 PApplet* umgebung::instance() {
-    return new KlangstromEmulator();
+    return KlangstromEmulator::instance();
 }
