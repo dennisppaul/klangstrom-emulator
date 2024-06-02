@@ -23,6 +23,8 @@
 #include <iostream>
 
 #include "Umgebung.h"
+#include "Drawable.h"
+#include "PeriodicalTask.h"
 
 using namespace umgebung;
 
@@ -34,6 +36,7 @@ class KlangstromEmulator : public PApplet {
     PFont*            mFont     = nullptr;
 
 public:
+    ~KlangstromEmulator() { task.stop(); }
     static KlangstromEmulator* instance();
     void                       arguments(std::vector<std::string> args);
     void                       settings();
@@ -42,8 +45,12 @@ public:
     void                       audioblock(float** input, float** output, int length);
     void                       keyPressed();
     std::string                get_emulator_name();
+    void                       register_drawable(Drawable* drawable);
+    void                       delay_loop(uint32_t ms);
+    void                       set_emulator_speed(float loop_frequency_hz) { task.set_frequency(loop_frequency_hz); }
 
 private:
     static KlangstromEmulator* fInstance;
     float                      DEFAULT_FONT_SIZE = 24;
+    PeriodicalTask             task;
 };

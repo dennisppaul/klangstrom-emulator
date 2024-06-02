@@ -16,33 +16,31 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include <iostream>
+#include <thread>
+#include <chrono>
+// #include <unistd.h> // usleep
+
 #include "Arduino.h"
+#include "KlangstromEmulator.h"
+
+// #include "KlangstromSerialDebug.h"
+// KLST_BSP_serialdebug_println("toggle %i: %f", i, fIntensities[i]);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-uint32_t millis(void)
-{
-  // ToDo: ensure no interrupts
-  return getCurrentMillis();
+uint32_t millis(void) {
+    return getCurrentMillis();
 }
 
-// Interrupt-compatible version of micros
-uint32_t micros(void)
-{
-  return getCurrentMicros();
+uint32_t micros(void) {
+    return getCurrentMicros();
 }
 
-void delay(uint32_t ms)
-{
-  // TODO
-  // if (ms != 0) {
-  //   uint32_t start = getCurrentMillis();
-  //   do {
-  //     yield();
-  //   } while (getCurrentMillis() - start < ms);
-  // }
+void delay(uint32_t ms) {
+    KlangstromEmulator::instance()->delay_loop(ms);
 }
 
 #ifdef __cplusplus

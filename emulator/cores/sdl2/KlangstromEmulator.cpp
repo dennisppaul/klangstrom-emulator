@@ -72,6 +72,10 @@ void KlangstromEmulator::setup() {
     }
 
     sketch_setup();
+
+    task.set_callback(sketch_loop);
+    task.set_frequency(1000);
+    task.start();
 }
 
 void KlangstromEmulator::draw() {
@@ -90,14 +94,9 @@ void KlangstromEmulator::draw() {
 
     fill(1);
     text(get_emulator_name(), 10, 10 + DEFAULT_FONT_SIZE);
-
-    sketch_loop();
 }
 
 void KlangstromEmulator::audioblock(float** input, float** output, int length) {
-    // if (fAudioDeviceCallback) {
-    //     fAudioDeviceCallback(input, output, length);
-    // }
     audiocodec_callback_class_f(input, output, length);
 }
 
@@ -134,4 +133,12 @@ KlangstromEmulator* KlangstromEmulator::instance() {
 
 PApplet* umgebung::instance() {
     return KlangstromEmulator::instance();
+}
+
+void KlangstromEmulator::register_drawable(Drawable* drawable) {
+    drawable->draw(g);
+}
+
+void KlangstromEmulator::delay_loop(uint32_t ms) {
+    task.sleep_for(ms);
 }
