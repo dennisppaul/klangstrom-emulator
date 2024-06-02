@@ -21,6 +21,7 @@
 
 #include "Arduino.h"
 #include <iostream>
+#include <vector>
 
 #include "Umgebung.h"
 #include "Drawable.h"
@@ -53,4 +54,5 @@ private:
     static KlangstromEmulator* fInstance;
     float                      DEFAULT_FONT_SIZE = 24;
     PeriodicalTask             task;
+    std::vector<Drawable*>     drawables;
 };

@@ -93,7 +93,11 @@ void KlangstromEmulator::draw() {
     // rect(20, 20, width / 2 - 40, height / 2 - 40);
 
     fill(1);
-    text(get_emulator_name(), 10, 10 + DEFAULT_FONT_SIZE);
+    text(get_emulator_name(), 25, 10 + DEFAULT_FONT_SIZE);
+
+    for (auto& drawable: drawables) {
+        drawable->draw(g);
+    }
 }
 
 void KlangstromEmulator::audioblock(float** input, float** output, int length) {
@@ -136,7 +140,7 @@ PApplet* umgebung::instance() {
 }
 
 void KlangstromEmulator::register_drawable(Drawable* drawable) {
-    drawable->draw(g);
+    drawables.push_back(drawable);
 }
 
 void KlangstromEmulator::delay_loop(uint32_t microseconds) {

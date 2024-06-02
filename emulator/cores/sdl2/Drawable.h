@@ -27,11 +27,4 @@ namespace umgebung {
     public:
         void virtual draw(PGraphics* g) = 0;
     };
-
-    class DummyDrawable : public Drawable {
-    public:
-        void draw(PGraphics* g) {
-            println("draw");
-        }
-    };
 } // namespace umgebung
