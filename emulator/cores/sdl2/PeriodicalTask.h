@@ -41,9 +41,9 @@ public:
         }
     }
 
-    void sleep_for(uint32_t milliseconds) {
+    void sleep_for(uint32_t microseconds) {
         std::lock_guard<std::mutex> lock(sleep_mutex);
-        std::chrono::milliseconds   mDuration(milliseconds);
+        std::chrono::microseconds   mDuration(microseconds);
         sleep_duration = mDuration;
     }
 
@@ -78,16 +78,16 @@ private:
             /* sleep */
             {
                 std::lock_guard<std::mutex> lock(sleep_mutex);
-                if (sleep_duration > milliseconds(0)) {
+                if (sleep_duration > microseconds(0)) {
                     std::this_thread::sleep_for(sleep_duration);
-                    sleep_duration = milliseconds(0); // Reset sleep duration after sleeping
+                    sleep_duration = microseconds(0); // Reset sleep duration after sleeping
                 }
             }
         }
     }
 
     float                         frequency;
-    std::chrono::milliseconds     sleep_duration{0};
+    std::chrono::microseconds     sleep_duration{0};
     std::atomic<bool>             running;
     std::thread                   worker_thread;
     std::mutex                    frequency_mutex;

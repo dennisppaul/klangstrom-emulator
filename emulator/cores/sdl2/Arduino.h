@@ -6,7 +6,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "wiring.h"
+#include "ArduinoFunctions.h"
 
 /* sketch */
 

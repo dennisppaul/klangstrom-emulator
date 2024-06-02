@@ -139,6 +139,6 @@ void KlangstromEmulator::register_drawable(Drawable* drawable) {
     drawable->draw(g);
 }
 
-void KlangstromEmulator::delay_loop(uint32_t ms) {
-    task.sleep_for(ms);
+void KlangstromEmulator::delay_loop(uint32_t microseconds) {
+    task.sleep_for(microseconds);
 }
