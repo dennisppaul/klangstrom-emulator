@@ -22,6 +22,7 @@
 #include <SDL.h>
 #include <iostream>
 
+#include "ArduinoFunctions.h"
 #include "KlangstromEmulator.h"
 #include "KlangstromEnvironment.h"
 
@@ -60,6 +61,10 @@ void KlangstromEmulator::settings() {
     mOutputBuffers = new float*[audio_output_channels];
     for (int i = 0; i < audio_output_channels; i++) {
         mOutputBuffers[i] = new float[DEFAULT_FRAMES_PER_BUFFER];
+    }
+    mInputBuffers = new float*[audio_input_channels];
+    for (int i = 0; i < audio_input_channels; i++) {
+        mInputBuffers[i] = new float[DEFAULT_FRAMES_PER_BUFFER];
     }
 }
 
@@ -107,9 +112,17 @@ void KlangstromEmulator::draw() {
 
 void KlangstromEmulator::audioblock(float** input, float** output, int length) {
     audiocodec_callback_class_f(input, output, length);
+    if (mOutputBuffers == nullptr || mInputBuffers == nullptr) {
+        return;
+    }
     for (int i = 0; i < length; i++) {
         for (int j = 0; j < audio_output_channels; j++) {
-            mOutputBuffers[j][i] = output[j][i];
+            mOutputBuffers[j][i] = constrain(output[j][i], -1.0f, 1.0f);
+        }
+    }
+    for (int i = 0; i < length; i++) {
+        for (int j = 0; j < audio_input_channels; j++) {
+            mInputBuffers[j][i] = constrain(input[j][i], -1.0f, 1.0f);
         }
     }
 }

@@ -50,6 +50,7 @@ public:
     void                       delay_loop(uint32_t ms);
     void                       set_emulator_speed(float loop_frequency_hz) { task.set_frequency(loop_frequency_hz); }
     float**                    get_audio_output_buffers() { return mOutputBuffers; }
+    float**                    get_audio_input_buffers() { return mInputBuffers; }
 
 private:
     static KlangstromEmulator* fInstance;
@@ -57,4 +58,5 @@ private:
     PeriodicalTask             task;
     std::vector<Drawable*>     drawables;
     float**                    mOutputBuffers = nullptr;
+    float**                    mInputBuffers  = nullptr;
 };
