@@ -49,10 +49,12 @@ public:
     void                       register_drawable(Drawable* drawable);
     void                       delay_loop(uint32_t ms);
     void                       set_emulator_speed(float loop_frequency_hz) { task.set_frequency(loop_frequency_hz); }
+    float**                    get_audio_output_buffers() { return mOutputBuffers; }
 
 private:
     static KlangstromEmulator* fInstance;
     float                      DEFAULT_FONT_SIZE = 24;
     PeriodicalTask             task;
     std::vector<Drawable*>     drawables;
+    float**                    mOutputBuffers = nullptr;
 };

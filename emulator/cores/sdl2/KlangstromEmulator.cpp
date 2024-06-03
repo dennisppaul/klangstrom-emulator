@@ -56,6 +56,11 @@ void KlangstromEmulator::settings() {
     headless              = false;
     no_audio              = false;
     monitor               = DEFAULT;
+
+    mOutputBuffers = new float*[audio_output_channels];
+    for (int i = 0; i < audio_output_channels; i++) {
+        mOutputBuffers[i] = new float[DEFAULT_FRAMES_PER_BUFFER];
+    }
 }
 
 void KlangstromEmulator::setup() {
@@ -102,6 +107,11 @@ void KlangstromEmulator::draw() {
 
 void KlangstromEmulator::audioblock(float** input, float** output, int length) {
     audiocodec_callback_class_f(input, output, length);
+    for (int i = 0; i < length; i++) {
+        for (int j = 0; j < audio_output_channels; j++) {
+            mOutputBuffers[j][i] = output[j][i];
+        }
+    }
 }
 
 void KlangstromEmulator::keyPressed() {
