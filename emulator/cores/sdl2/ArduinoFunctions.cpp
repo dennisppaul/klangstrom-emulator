@@ -129,24 +129,27 @@ uint8_t bit(uint8_t n) {
     return 1 << n;
 }
 
-void bitClear(uint8_t& value, uint8_t bit) {
+uint8_t bitClear(uint8_t value, uint8_t bit) {
     value &= ~(1 << bit);
+    return value;
 }
 
 bool bitRead(uint8_t value, uint8_t bit) {
     return (value >> bit) & 1;
 }
 
-void bitSet(uint8_t& value, uint8_t bit) {
+uint8_t bitSet(uint8_t value, uint8_t bit) {
     value |= (1 << bit);
+    return value;
 }
 
-void bitWrite(uint8_t& value, uint8_t bit, bool bitValue) {
+uint8_t bitWrite(uint8_t value, uint8_t bit, bool bitValue) {
     if (bitValue) {
-        bitSet(value, bit);
+        value = bitSet(value, bit);
     } else {
-        bitClear(value, bit);
+        value = bitClear(value, bit);
     }
+    return value;
 }
 
 uint8_t highByte(uint16_t value) {

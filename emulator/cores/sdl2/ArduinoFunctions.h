@@ -98,10 +98,10 @@ void randomSeed(uint32_t seed);
 
 // Bits and Bytes
 uint8_t bit(uint8_t n);
-void    bitClear(uint8_t& value, uint8_t bit);
+uint8_t bitClear(uint8_t value, uint8_t bit);
 bool    bitRead(uint8_t value, uint8_t bit);
-void    bitSet(uint8_t& value, uint8_t bit);
-void    bitWrite(uint8_t& value, uint8_t bit, bool bitValue);
+uint8_t bitSet(uint8_t value, uint8_t bit);
+uint8_t bitWrite(uint8_t value, uint8_t bit, bool bitValue);
 uint8_t highByte(uint16_t value);
 uint8_t lowByte(uint16_t value);
 
