@@ -1,4 +1,4 @@
-KLST_EMU.name=Klangstrom Emulator
+KLST_EMU.name=Klangstrom Emulator (v2)
 KLST_EMU.upload.tool=sdlexecprog
 KLST_EMU.upload.wait_for_upload_port=false
 KLST_EMU.build.board=KLST_EMU
