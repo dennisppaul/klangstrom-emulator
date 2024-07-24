@@ -25,6 +25,6 @@ namespace umgebung {
 
     class Drawable {
     public:
-        void virtual draw(PGraphics* g) = 0;
+        virtual void draw(PGraphics* g) = 0;
     };
 } // namespace umgebung

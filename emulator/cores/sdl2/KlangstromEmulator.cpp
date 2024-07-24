@@ -18,8 +18,6 @@
  */
 
 #define ARDUINO_MAIN
-#include <stdio.h>
-#include <SDL.h>
 #include <iostream>
 
 #include "ArduinoFunctions.h"
@@ -28,7 +26,8 @@
 
 using namespace umgebung;
 
-extern "C" void audiocodec_callback_class_f(float** input, float** output, uint16_t length);
+extern "C" void KLST_BSP_audiocodec_process_audioblock_data(AudioBlock* audio_block);
+//extern "C" void audiocodec_callback_class_f(float** input, float** output, uint16_t length);
 
 static void sketch_setup() {
     setup();
@@ -110,8 +109,38 @@ void KlangstromEmulator::draw() {
     }
 }
 
+/**
+ * called from umgebung to request and process audio data
+ * @param input
+ * @param output
+ * @param length
+ */
 void KlangstromEmulator::audioblock(float** input, float** output, int length) {
-    audiocodec_callback_class_f(input, output, length);
+    // TODO here we need to collect data from all audio devices and mix them into the output buffer
+    // TODO assuming that the underlying audio system always has 2 output and 1 or 2 input channels how would this be mapped. e.g:
+    // - mono output is mapped to both LEFT and RIGHT, stereo output is mapped to channel LEFT and RIGHT each, 3 channels are mapped to LEFT, CENTER;, RIGHT, etcetera
+    //    audiocodec_callback_class_f(input, output, length);
+    if (fAudioDevices.size() > 1) {
+        println("multiple audio devices detected. currently only one device supported");
+    }
+    for (auto* device: fAudioDevices) {
+        // TODO create method to copy device info into audioblock
+        AudioBlock audio_block; // "how to include `AudioBLock`?"
+        audio_block.sample_rate     = device->get_audioinfo()->sample_rate;
+        audio_block.output_channels = audio_output_channels;
+        audio_block.input_channels  = audio_input_channels;
+        audio_block.block_size      = length; // TODO what if blocksizes do not align?!?
+        audio_block.output          = output; // TODO this needs to be handle for each device
+        audio_block.input           = input; // TODO this needs to be handle for each device
+        audio_block.device          = device->get_id();
+        KLST_BSP_audiocodec_process_audioblock_data(&audio_block);
+    }
+    // TODO merge into `float** input, float** output`
+
+    /* fill buffers for oscilloscope visualization */
+    // TODO this is complicated if buffer sizes do not align, currently
+    // `mOutputBuffers` and `mInputBuffers` are statically allocated in the beginning
+    // which will not work ...
     if (mOutputBuffers == nullptr || mInputBuffers == nullptr) {
         return;
     }
