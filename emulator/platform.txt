@@ -33,8 +33,6 @@ recipe.hooks.prebuild.12.pattern={runtime.platform.path}/check-for-tools.sh
 compiler.path.macosx=/usr/bin/
 compiler.path.linux=/usr/bin/
 compiler.klst_define=-DKLST_ENV={build.flags.board}
-#-DKLST_ARCH=2 -DKLANG_SAMPLES_PER_AUDIO_BLOCK={build.flags.audioblock} {build.flags.OSC} {build.flags.DISPLAY} -DKLANG_AUDIO_RATE={build.flags.samplingrate} -DKLANG_DEBUG_LEVEL=2 -DKLANG_OSC_TRANSMIT_PORT=7001 -DKLANG_OSC_RECEIVE_PORT=7001 -DKLANG_BOARD_EMULATOR={build.flags.board} -DKLST_USE_CMSIS_DSP -DTEST 
-# "-I{build.core.path}/{compiler.klst_shared}"
 
 # umgebung
 compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl2/umgebung/include -I{runtime.platform.path}/cores/sdl2/umgebung/src -I{runtime.platform.path}/cores/sdl2/umgebung/include/ip -I{runtime.platform.path}/cores/sdl2/umgebung/include/osc -I/opt/homebrew/include/freetype2/

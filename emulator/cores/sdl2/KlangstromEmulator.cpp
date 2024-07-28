@@ -132,7 +132,7 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
         audio_block.block_size      = length; // TODO what if blocksizes do not align?!?
         audio_block.output          = output; // TODO this needs to be handle for each device
         audio_block.input           = input; // TODO this needs to be handle for each device
-        audio_block.device          = device->get_id();
+        audio_block.device_id       = device->get_id();
         KLST_BSP_audiocodec_process_audioblock_data(&audio_block);
     }
     // TODO merge into `float** input, float** output`
