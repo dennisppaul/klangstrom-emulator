@@ -27,26 +27,9 @@
 #include "Drawable.h"
 #include "PeriodicalTask.h"
 #include "KlangstromAudio.h"
+#include "KlangstromEmulatorAudioDevice.h"
 
 using namespace umgebung;
-
-class KlangstromEmulatorAudioDevice {
-public:
-    KlangstromEmulatorAudioDevice(AudioInfo* audioinfo, uint8_t device_id) : fAudioinfo(audioinfo), id(device_id) {
-        // TODO here we need to communicate with the underlying layer. thoughts are:
-        // - to create a device ID and return it
-        // - emulate sample rate and bit depth
-        // - resepct output channels and input channels … maybe mix them in underlying layer into stereo
-        // TODO this is just a quick hack and needs to come from underyling layer
-    }
-
-    uint8_t    get_id() const { return id; }
-    AudioInfo* get_audioinfo() const { return fAudioinfo; }
-
-private:
-    const uint8_t id;
-    AudioInfo*    fAudioinfo;
-};
 
 class KlangstromEmulator : public PApplet {
     PVector           mVector{16, 16};
@@ -75,16 +58,7 @@ public:
     void                       set_emulator_speed(float loop_frequency_hz) { task.set_frequency(loop_frequency_hz); }
     float**                    get_audio_output_buffers() { return mOutputBuffers; }
     float**                    get_audio_input_buffers() { return mInputBuffers; }
-    uint8_t                    register_audio_device(AudioInfo* audioinfo) {
-        // TODO here we need to communicate with the underlying layer. thoughts are:
-        // - to create a device ID and return it
-        // - emulate sample rate and bit depth
-        // - resepct output channels and input channels … maybe mix them in underlying layer into stereo
-        auto* mAudioDevice = new KlangstromEmulatorAudioDevice(audioinfo, audio_device_id);
-        fAudioDevices.push_back(mAudioDevice);
-        audio_device_id++;
-        return mAudioDevice->get_id();
-    }
+    uint8_t                    register_audio_device(AudioInfo* audioinfo);
 
 private:
     static KlangstromEmulator*                  fInstance;

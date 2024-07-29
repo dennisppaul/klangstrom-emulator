@@ -17,7 +17,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ARDUINO_MAIN
 #include <iostream>
 
 #include "ArduinoFunctions.h"
@@ -27,7 +26,6 @@
 using namespace umgebung;
 
 extern "C" void KLST_BSP_audiocodec_process_audioblock_data(AudioBlock* audio_block);
-//extern "C" void audiocodec_callback_class_f(float** input, float** output, uint16_t length);
 
 static void sketch_setup() {
     setup();
@@ -131,7 +129,7 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
         audio_block.input_channels  = audio_input_channels;
         audio_block.block_size      = length; // TODO what if blocksizes do not align?!?
         audio_block.output          = output; // TODO this needs to be handle for each device
-        audio_block.input           = input; // TODO this needs to be handle for each device
+        audio_block.input           = input;  // TODO this needs to be handle for each device
         audio_block.device_id       = device->get_id();
         KLST_BSP_audiocodec_process_audioblock_data(&audio_block);
     }
@@ -193,6 +191,17 @@ PApplet* umgebung::instance() {
 
 void KlangstromEmulator::register_drawable(Drawable* drawable) {
     drawables.push_back(drawable);
+}
+
+uint8_t KlangstromEmulator::register_audio_device(AudioInfo* audioinfo) {
+    // TODO here we need to communicate with the underlying layer. thoughts are:
+    // - to create a device ID and return it
+    // - emulate sample rate and bit depth
+    // - resepct output channels and input channels … maybe mix them in underlying layer into stereo
+    auto* mAudioDevice = new KlangstromEmulatorAudioDevice(audioinfo, audio_device_id);
+    fAudioDevices.push_back(mAudioDevice);
+    audio_device_id++;
+    return mAudioDevice->get_id();
 }
 
 void KlangstromEmulator::delay_loop(uint32_t microseconds) {
