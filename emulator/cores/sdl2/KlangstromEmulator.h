@@ -69,4 +69,6 @@ private:
     float**                                     mInputBuffers   = nullptr;
     uint8_t                                     audio_device_id = 0;
     std::vector<KlangstromEmulatorAudioDevice*> fAudioDevices;
+
+    void process_device(KlangstromEmulatorAudioDevice* device, AudioBlock* audio_block);
 };

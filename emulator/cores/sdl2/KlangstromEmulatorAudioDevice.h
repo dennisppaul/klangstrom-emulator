@@ -24,13 +24,7 @@
 
 class KlangstromEmulatorAudioDevice {
 public:
-    KlangstromEmulatorAudioDevice(AudioInfo* audioinfo, uint8_t device_id) : fAudioinfo(audioinfo), id(device_id) {
-        // TODO here we need to communicate with the underlying layer. thoughts are:
-        // - to create a device ID and return it
-        // - emulate sample rate and bit depth
-        // - resepct output channels and input channels … maybe mix them in underlying layer into stereo
-        // TODO this is just a quick hack and needs to come from underyling layer
-    }
+    KlangstromEmulatorAudioDevice(AudioInfo* audioinfo, uint8_t device_id) : fAudioinfo(audioinfo), id(device_id) {}
 
     uint8_t    get_id() const { return id; }
     AudioInfo* get_audioinfo() const { return fAudioinfo; }

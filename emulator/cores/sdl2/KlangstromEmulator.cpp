@@ -71,11 +71,21 @@ void KlangstromEmulator::setup() {
     println("width     : ", width);
     println("height    : ", height);
 
+    std::string font_file;
     if (exists(mFontPath + "/" + mFontName)) {
-        mFont = loadFont(mFontPath + "/" + mFontName, DEFAULT_FONT_SIZE);
+        font_file = mFontPath + "/" + mFontName;
+    } else if (exists(mFontPath + "/../" + mFontName)) {
+        font_file = mFontPath + "/../" + mFontName;
+    }
+
+    if (!font_file.empty()) {
+        mFont = loadFont(font_file, DEFAULT_FONT_SIZE);
         textFont(mFont);
     } else {
-        println("could not load font: ", (mFontPath + "/" + mFontName));
+        println("could not load font: ",
+                (mFontPath + "/" + mFontName),
+                " or ",
+                (mFontPath + "/../" + mFontName));
     }
 
     sketch_setup();
@@ -107,6 +117,14 @@ void KlangstromEmulator::draw() {
     }
 }
 
+void KlangstromEmulator::process_device(KlangstromEmulatorAudioDevice* device,
+                                        AudioBlock*                    audio_block) {
+    audio_block->sample_rate = device->get_audioinfo()->sample_rate;
+    audio_block->block_size  = device->get_audioinfo()->block_size;
+    audio_block->device_id   = device->get_id();
+    KLST_BSP_audiocodec_process_audioblock_data(audio_block);
+}
+
 /**
  * called from umgebung to request and process audio data
  * @param input
@@ -114,31 +132,68 @@ void KlangstromEmulator::draw() {
  * @param length
  */
 void KlangstromEmulator::audioblock(float** input, float** output, int length) {
-    // TODO here we need to collect data from all audio devices and mix them into the output buffer
-    // TODO assuming that the underlying audio system always has 2 output and 1 or 2 input channels how would this be mapped. e.g:
-    // - mono output is mapped to both LEFT and RIGHT, stereo output is mapped to channel LEFT and RIGHT each, 3 channels are mapped to LEFT, CENTER;, RIGHT, etcetera
-    //    audiocodec_callback_class_f(input, output, length);
     if (fAudioDevices.size() > 1) {
-        println("multiple audio devices detected. currently only one device supported");
+        println("multiple audio devices detected. currently only one device supported. only the last audio device will be audible ...");
     }
     for (auto* device: fAudioDevices) {
-        // TODO create method to copy device info into audioblock
-        AudioBlock audio_block; // "how to include `AudioBLock`?"
-        audio_block.sample_rate     = device->get_audioinfo()->sample_rate;
-        audio_block.output_channels = audio_output_channels;
-        audio_block.input_channels  = audio_input_channels;
-        audio_block.block_size      = length; // TODO what if blocksizes do not align?!?
-        audio_block.output          = output; // TODO this needs to be handle for each device
-        audio_block.input           = input;  // TODO this needs to be handle for each device
-        audio_block.device_id       = device->get_id();
-        KLST_BSP_audiocodec_process_audioblock_data(&audio_block);
+        AudioBlock audio_block;
+        const int  block_size = device->get_audioinfo()->block_size;
+
+        if (block_size > length) {
+            println("block size mismatch: reduce device block size (", block_size, ") to either equal or smaller multiple of ", length);
+            continue;
+        }
+
+        if (length % block_size != 0) {
+            println("block size mismatch: device block size (", block_size, ") must be multiple of ", length);
+            continue;
+        }
+
+        // TODO here we need to collect data from all audio devices and mix them into the output buffer
+        // TODO assuming that the underlying audio system always has 2 output and 1 or 2 input channels how would this be mapped. e.g:
+        // - mono output is mapped to both LEFT and RIGHT, stereo output is mapped to channel LEFT and RIGHT each, 3 channels are mapped to LEFT, CENTER;, RIGHT, etcetera
+        //    audiocodec_callback_class_f(input, output, length);
+        // TODO handle cases where number of output and input channels do not match.
+        // TODO especially when device has or expects more channels than audio system
+        if (device->get_audioinfo()->output_channels > audio_output_channels) {
+            println("output channels mismatch: device output channels (", static_cast<int>(device->get_audioinfo()->output_channels), ") must match audio system output channels (", audio_output_channels, ")");
+            continue;
+        }
+        if (device->get_audioinfo()->input_channels > audio_input_channels) {
+            println("input channels mismatch: device input channels (", static_cast<int>(device->get_audioinfo()->input_channels), ") must match audio system input channels (", audio_input_channels, ")");
+            continue;
+        }
+        audio_block.output_channels = device->get_audioinfo()->output_channels;
+        audio_block.input_channels  = device->get_audioinfo()->input_channels;
+
+        /* process audio data ( if need be in multiple passes ) */
+        const uint8_t mPasses = length / block_size;
+        if (mPasses == 1) {
+            audio_block.output = output;
+            audio_block.input  = input;
+            process_device(device, &audio_block);
+        } else {
+            for (uint8_t i = 0; i < mPasses; ++i) {
+                float* output_ptr[audio_output_channels];
+                float* input_ptr[audio_input_channels];
+
+                for (int ch = 0; ch < audio_output_channels; ++ch) {
+                    output_ptr[ch] = output[ch] + i * block_size;
+                }
+
+                for (int ch = 0; ch < audio_input_channels; ++ch) {
+                    input_ptr[ch] = input[ch] + i * block_size;
+                }
+
+                audio_block.output = output_ptr;
+                audio_block.input  = input_ptr;
+
+                process_device(device, &audio_block);
+            }
+        }
     }
-    // TODO merge into `float** input, float** output`
 
     /* fill buffers for oscilloscope visualization */
-    // TODO this is complicated if buffer sizes do not align, currently
-    // `mOutputBuffers` and `mInputBuffers` are statically allocated in the beginning
-    // which will not work ...
     if (mOutputBuffers == nullptr || mInputBuffers == nullptr) {
         return;
     }
@@ -194,10 +249,6 @@ void KlangstromEmulator::register_drawable(Drawable* drawable) {
 }
 
 uint8_t KlangstromEmulator::register_audio_device(AudioInfo* audioinfo) {
-    // TODO here we need to communicate with the underlying layer. thoughts are:
-    // - to create a device ID and return it
-    // - emulate sample rate and bit depth
-    // - resepct output channels and input channels … maybe mix them in underlying layer into stereo
     auto* mAudioDevice = new KlangstromEmulatorAudioDevice(audioinfo, audio_device_id);
     fAudioDevices.push_back(mAudioDevice);
     audio_device_id++;
