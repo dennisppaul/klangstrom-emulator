@@ -60,9 +60,10 @@ public:
     float**                    get_audio_input_buffers() { return mInputBuffers; }
     uint8_t                    register_audio_device(AudioDevice* audiodevice);
 
+    static constexpr float DEFAULT_FONT_SIZE = 24;
+
 private:
     static KlangstromEmulator*                  fInstance;
-    float                                       DEFAULT_FONT_SIZE = 24;
     PeriodicalTask                              task;
     std::vector<Drawable*>                      drawables;
     float**                                     mOutputBuffers  = nullptr;

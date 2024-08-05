@@ -111,6 +111,7 @@ void KlangstromEmulator::draw() {
     // rect(20, 20, width / 2 - 40, height / 2 - 40);
 
     fill(1);
+    textSize(DEFAULT_FONT_SIZE);
     text(get_emulator_name(), 25, 10 + DEFAULT_FONT_SIZE);
 
     for (auto& drawable: drawables) {
