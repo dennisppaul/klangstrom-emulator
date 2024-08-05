@@ -138,6 +138,11 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
     if (fAudioDevices.size() > 1) {
         println("multiple audio devices detected. currently only one device supported. only the last audio device will be audible ...");
     }
+
+    for (int ch = 0; ch < audio_output_channels; ++ch) {
+        memset(output[ch], 0, length * sizeof(float));
+    }
+
     for (auto* device: fAudioDevices) {
         AudioBlock& audioblock = *device->get_audiodevice()->audioblock;
         const int   block_size = audioblock.block_size;
@@ -166,11 +171,17 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
             continue;
         }
 
+        const bool mIsPaused = device->get_audiodevice()->peripherals->is_paused;
+        if (mIsPaused) {
+            continue;
+        }
+
         /* process audio data ( if need be in multiple passes ) */
         const uint8_t mPasses = length / block_size;
         for (uint8_t i = 0; i < mPasses; ++i) {
             for (int ch = 0; ch < audioblock.input_channels; ++ch) {
-                // TODO if audio system ( i.e SDL ) provides only mono input, then we map all input channels to the same channel
+                // TODO if audio system ( i.e SDL ) provides only mono input,
+                //  then we map all input channels to the same channel
                 int    actual_channel = audio_input_channels == 1 ? 0 : ch;
                 float* input_ptr      = input[actual_channel] + i * block_size;
                 memcpy(audioblock.input[ch], input_ptr, block_size * sizeof(float));
@@ -180,7 +191,9 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
 
             for (int ch = 0; ch < audioblock.output_channels; ++ch) {
                 float* output_ptr = output[ch] + i * block_size;
-                memcpy(output_ptr, audioblock.output[ch], block_size * sizeof(float));
+                for (int j = 0; j < block_size; ++j) {
+                    output_ptr[j] += audioblock.output[ch][j];
+                }
             }
         }
     }
