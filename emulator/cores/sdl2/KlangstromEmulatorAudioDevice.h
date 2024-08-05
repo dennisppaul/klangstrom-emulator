@@ -20,16 +20,16 @@
 #pragma once
 
 #include <stdint.h>
-#include "KlangstromAudio.h"
+#include "AudioDevice.h"
 
 class KlangstromEmulatorAudioDevice {
 public:
-    KlangstromEmulatorAudioDevice(AudioInfo* audioinfo, uint8_t device_id) : fAudioinfo(audioinfo), id(device_id) {}
+    KlangstromEmulatorAudioDevice(AudioDevice* audiodevice, uint8_t device_id) : fAudioDevice(audiodevice), id(device_id) {}
 
-    uint8_t    get_id() const { return id; }
-    AudioInfo* get_audioinfo() const { return fAudioinfo; }
+    uint8_t      get_id() const { return id; }
+    AudioDevice* get_audiodevice() const { return fAudioDevice; }
 
 private:
     const uint8_t id;
-    AudioInfo*    fAudioinfo;
+    AudioDevice*  fAudioDevice;
 };

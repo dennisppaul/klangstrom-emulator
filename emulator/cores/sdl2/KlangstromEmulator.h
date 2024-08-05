@@ -26,7 +26,7 @@
 #include "Umgebung.h"
 #include "Drawable.h"
 #include "PeriodicalTask.h"
-#include "KlangstromAudio.h"
+#include "AudioDevice.h"
 #include "KlangstromEmulatorAudioDevice.h"
 
 using namespace umgebung;
@@ -58,7 +58,7 @@ public:
     void                       set_emulator_speed(float loop_frequency_hz) { task.set_frequency(loop_frequency_hz); }
     float**                    get_audio_output_buffers() { return mOutputBuffers; }
     float**                    get_audio_input_buffers() { return mInputBuffers; }
-    uint8_t                    register_audio_device(AudioInfo* audioinfo);
+    uint8_t                    register_audio_device(AudioDevice* audiodevice);
 
 private:
     static KlangstromEmulator*                  fInstance;
@@ -70,5 +70,5 @@ private:
     uint8_t                                     audio_device_id = 0;
     std::vector<KlangstromEmulatorAudioDevice*> fAudioDevices;
 
-    void process_device(KlangstromEmulatorAudioDevice* device, AudioBlock* audio_block);
+    void process_device(KlangstromEmulatorAudioDevice* device);
 };

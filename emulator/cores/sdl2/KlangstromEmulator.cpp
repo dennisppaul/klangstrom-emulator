@@ -22,10 +22,11 @@
 #include "ArduinoFunctions.h"
 #include "KlangstromEmulator.h"
 #include "KlangstromEnvironment.h"
+#include "AudioDevice_ASP_EMU.h"
+
+#include "Console.h"
 
 using namespace umgebung;
-
-extern "C" void KLST_BSP_audiocodec_process_audioblock_data(AudioBlock* audio_block);
 
 static void sketch_setup() {
     setup();
@@ -117,14 +118,16 @@ void KlangstromEmulator::draw() {
     }
 }
 
-void KlangstromEmulator::process_device(KlangstromEmulatorAudioDevice* device,
-                                        AudioBlock*                    audio_block) {
-    audio_block->sample_rate = device->get_audioinfo()->sample_rate;
-    audio_block->block_size  = device->get_audioinfo()->block_size;
-    audio_block->device_id   = device->get_id();
-    KLST_BSP_audiocodec_process_audioblock_data(audio_block);
+void KlangstromEmulator::process_device(KlangstromEmulatorAudioDevice* device) {
+    // TODO if use double buffering here or if we just use normal buffer i.e `CALLBACK_FULL_COMPLETE`
+    device->get_audiodevice()->peripherals->callback_tx(device->get_audiodevice(), CALLBACK_FULL_COMPLETE);
 }
 
+static inline void copy_float_array_2D(float** src, float** dest, int rows, int cols) {
+    for (int i = 0; i < rows; ++i) {
+        memcpy(dest[i], src[i], cols * sizeof(float));
+    }
+}
 /**
  * called from umgebung to request and process audio data
  * @param input
@@ -136,8 +139,8 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
         println("multiple audio devices detected. currently only one device supported. only the last audio device will be audible ...");
     }
     for (auto* device: fAudioDevices) {
-        AudioBlock audio_block;
-        const int  block_size = device->get_audioinfo()->block_size;
+        AudioBlock& audioblock = *device->get_audiodevice()->audioblock;
+        const int   block_size = audioblock.block_size;
 
         if (block_size > length) {
             println("block size mismatch: reduce device block size (", block_size, ") to either equal or smaller multiple of ", length);
@@ -149,46 +152,35 @@ void KlangstromEmulator::audioblock(float** input, float** output, int length) {
             continue;
         }
 
-        // TODO here we need to collect data from all audio devices and mix them into the output buffer
         // TODO assuming that the underlying audio system always has 2 output and 1 or 2 input channels how would this be mapped. e.g:
-        // - mono output is mapped to both LEFT and RIGHT, stereo output is mapped to channel LEFT and RIGHT each, 3 channels are mapped to LEFT, CENTER;, RIGHT, etcetera
-        //    audiocodec_callback_class_f(input, output, length);
+        //     - mono output is mapped to both LEFT and RIGHT, stereo output is mapped to channel LEFT and RIGHT each, 3 channels are mapped to LEFT, CENTER;, RIGHT, etcetera
         // TODO handle cases where number of output and input channels do not match.
         // TODO especially when device has or expects more channels than audio system
-        if (device->get_audioinfo()->output_channels > audio_output_channels) {
-            println("output channels mismatch: device output channels (", static_cast<int>(device->get_audioinfo()->output_channels), ") must match audio system output channels (", audio_output_channels, ")");
+        if (audioblock.output_channels > audio_output_channels) {
+            println("output channels mismatch: device output channels (", static_cast<int>(audioblock.output_channels), ") must match audio system output channels (", audio_output_channels, ")");
             continue;
         }
-        if (device->get_audioinfo()->input_channels > audio_input_channels) {
-            println("input channels mismatch: device input channels (", static_cast<int>(device->get_audioinfo()->input_channels), ") must match audio system input channels (", audio_input_channels, ")");
+
+        if (audioblock.input_channels > audio_input_channels && audioblock.input_channels > 2) {
+            println("input channels mismatch: device input channels (", static_cast<int>(audioblock.input_channels), ") must match audio system input channels (", audio_input_channels, ")");
             continue;
         }
-        audio_block.output_channels = device->get_audioinfo()->output_channels;
-        audio_block.input_channels  = device->get_audioinfo()->input_channels;
 
         /* process audio data ( if need be in multiple passes ) */
         const uint8_t mPasses = length / block_size;
-        if (mPasses == 1) {
-            audio_block.output = output;
-            audio_block.input  = input;
-            process_device(device, &audio_block);
-        } else {
-            for (uint8_t i = 0; i < mPasses; ++i) {
-                float* output_ptr[audio_output_channels];
-                float* input_ptr[audio_input_channels];
+        for (uint8_t i = 0; i < mPasses; ++i) {
+            for (int ch = 0; ch < audioblock.input_channels; ++ch) {
+                // TODO if audio system ( i.e SDL ) provides only mono input, then we map all input channels to the same channel
+                int    actual_channel = audio_input_channels == 1 ? 0 : ch;
+                float* input_ptr      = input[actual_channel] + i * block_size;
+                memcpy(audioblock.input[ch], input_ptr, block_size * sizeof(float));
+            }
 
-                for (int ch = 0; ch < audio_output_channels; ++ch) {
-                    output_ptr[ch] = output[ch] + i * block_size;
-                }
+            process_device(device);
 
-                for (int ch = 0; ch < audio_input_channels; ++ch) {
-                    input_ptr[ch] = input[ch] + i * block_size;
-                }
-
-                audio_block.output = output_ptr;
-                audio_block.input  = input_ptr;
-
-                process_device(device, &audio_block);
+            for (int ch = 0; ch < audioblock.output_channels; ++ch) {
+                float* output_ptr = output[ch] + i * block_size;
+                memcpy(output_ptr, audioblock.output[ch], block_size * sizeof(float));
             }
         }
     }
@@ -248,8 +240,8 @@ void KlangstromEmulator::register_drawable(Drawable* drawable) {
     drawables.push_back(drawable);
 }
 
-uint8_t KlangstromEmulator::register_audio_device(AudioInfo* audioinfo) {
-    auto* mAudioDevice = new KlangstromEmulatorAudioDevice(audioinfo, audio_device_id);
+uint8_t KlangstromEmulator::register_audio_device(AudioDevice* audiodevice) {
+    auto* mAudioDevice = new KlangstromEmulatorAudioDevice(audiodevice, audio_device_id);
     fAudioDevices.push_back(mAudioDevice);
     audio_device_id++;
     return mAudioDevice->get_id();
