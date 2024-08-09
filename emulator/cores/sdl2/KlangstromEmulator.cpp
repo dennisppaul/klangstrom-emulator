@@ -24,8 +24,6 @@
 #include "KlangstromEnvironment.h"
 #include "AudioDevice_ASP_EMU.h"
 
-#include "Console.h"
-
 using namespace umgebung;
 
 static void sketch_setup() {
@@ -89,6 +87,7 @@ void KlangstromEmulator::setup() {
                 (mFontPath + "/../" + mFontName));
     }
 
+    osc_setup();
     sketch_setup();
 
     task.set_callback(sketch_loop);
@@ -261,6 +260,82 @@ uint8_t KlangstromEmulator::register_audio_device(AudioDevice* audiodevice) {
     return mAudioDevice->get_id();
 }
 
+uint8_t KlangstromEmulator::register_serial_device(SerialDevice* serialdevice) {
+    (void)serialdevice;
+    //    auto* mAudioDevice = new KlangstromEmulatorAudioDevice(audiodevice, audio_device_id);
+    //    fAudioDevices.push_back(mAudioDevice);
+    //    audio_device_id++;
+    //    return mAudioDevice->get_id();
+    println("TODO register serial device at emulator");
+    return 0;
+}
+
 void KlangstromEmulator::delay_loop(uint32_t microseconds) {
     task.sleep_for(microseconds);
+}
+
+bool KlangstromEmulator::update_serial_data(SerialDevice* device, const char* msg_data, const int msg_data_length) {
+    device->length = msg_data_length;
+    for (uint16_t i = 0; i < msg_data_length; ++i) {
+        if (i >= device->data_buffer_size) {
+            device->length = device->data_buffer_size;
+            println("ERROR: data buffer overflow");
+            return false;
+        }
+        device->data[i] = msg_data[i];
+    }
+    return true;
+}
+bool KlangstromEmulator::evaluate_serial_msg(const OscMessage& msg, SerialDevice* device) {
+    //    println("app: evaluate_serial_msg");
+    if (begins_with(msg.addrPattern(), KLST_EMU_SERIAL_ADDRESS_PATTERN)) {
+        if (begins_with(msg.typetag(), KLST_EMU_SERIAL_TYPETAG)) {
+            const int         msg_device_type = msg.get(KLST_EMU_SERIAL_DEVICE_MSG_POSITION_TYPE).intValue();
+            const int         msg_device_id   = msg.get(KLST_EMU_SERIAL_DEVICE_MSG_POSITION_ID).intValue();
+            const std::string msg_data_str    = msg.get(KLST_EMU_SERIAL_DEVICE_MSG_POSITION_DATA).stringValue();
+            const char*       msg_data        = msg_data_str.c_str();
+            const int         msg_data_length = msg_data_str.length();
+            //            const int         msg_data_length = msg.get(KLST_EMU_SERIAL_DEVICE_MSG_POSITION_LENGTH).intValue();
+
+            /* copy data to serial device buffer */
+            if (msg_data_str.length() != msg.get(KLST_EMU_SERIAL_DEVICE_MSG_POSITION_LENGTH).intValue()) {
+                println("ERROR: data length mismatch. setting `length` to actual length of `data` buffer.");
+            }
+
+            /* trigger callback */
+            if (msg_device_type == SERIAL_DEVICE_TYPE_UNDEFINED) {
+                /* device by id, ignoring type */
+                if (device->device_id == msg_device_id) {
+                    update_serial_data(device, msg_data, msg_data_length);
+                    device->callback_serial(device);
+                    return true;
+                }
+            } else if (msg_device_id == SERIAL_DEVICE_ID_UNDEFINED) {
+                /* device by type, ignoring ID */
+                if (device->device_type == msg_device_type) {
+                    update_serial_data(device, msg_data, msg_data_length);
+                    device->callback_serial(device);
+                    return true;
+                }
+            } else {
+                /* device by id + type */
+                if (device->device_type == msg_device_type &&
+                    device->device_id == msg_device_id) {
+                    update_serial_data(device, msg_data, msg_data_length);
+                    device->callback_serial(device);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+void KlangstromEmulator::receive(const OscMessage& msg) {
+    //    println("app: received OSC message: ", msg.typetag());
+    ArrayList_SerialDevicePtr* sd = system_get_registered_serialdevices();
+    for (int i = 0; i < sd->size; i++) {
+        SerialDevice* device = arraylist_SerialDevicePtr_get(sd, i);
+        evaluate_serial_msg(msg, device); // TODO consider skipping other devices with `continue;` on success
+    }
 }
